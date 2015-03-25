@@ -14,8 +14,8 @@ g = zeros(size(z));
 
 
 
-
-
+% arrayfun calls function on each element in arg 2 (z)
+g = arrayfun(@sigmoid, z) .* (1 - arrayfun(@sigmoid, z));
 
 
 

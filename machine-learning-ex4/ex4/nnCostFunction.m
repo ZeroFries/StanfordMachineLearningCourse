@@ -62,42 +62,62 @@ Theta2_grad = zeros(size(Theta2));
 %               and Theta2_grad from Part 2.
 %
 
-% compute H (feed forward result)
-predictions = predict(Theta1, Theta2, X);
+gradient_2 = zeros(size(Theta2));
+gradient_1 = zeros(size(Theta1));
 
+% Feed forward and compute J for each example in X 
+% Backpropogate for error gradient
 for i = 1:m
-	% fprintf('Y: %d \n', y(i));
-	% convert y(i) (digit val) to classification vector (eg - 3 => (0 0 0 3 0 0 0 0 0 0) )
-	y_vec = zeros(num_labels, 1);
-	y_vec(y(i)) = 1;
-	% convert prediction (digit val) to classification vector
-	p_vec = zeros(num_labels, 1);
-	p_vec(predictions(i)) = 1;
-	% fprintf('H: %d \n', predictions(i));
-	for k = 1:num_labels
+	% convert y(i) (digit val) to classification col vector (eg - 3 => (0 0 3 0 0 0 0 0 0)' )
+	% eye == identity matrix
+	y_vec = eye(num_labels)(:, y(i));
+	
+	% get the row of pixels corresponding to that example
+	x = [1; X(i, :)'];
+	% compute activation values for each layer until the end
+	z_2 = Theta1 * x;
+	a_2 = [1; sigmoid(z_2)];
+	z_3 = Theta2 * a_2;
+	a_3 = sigmoid(z_3);
+
+	% col vec 1 .* col vec 2 => each element in vec 1 multiples the corresponding ele in vec 2
+	% eg: (1 2 3)' .* (2 4 6)' = (2 8 18)'
+	J += sum((-y_vec .* log(a_3)) - ((1 - y_vec) .* log(1 - a_3)));
+	
+	% perform backprop
+	delta_3 = a_3 - y_vec;
+	delta_2 = (Theta2(:,2:end)' * delta_3) .* sigmoidGradient(z_2);
 	
 	
-	% log of 0 wtf??
-		J +=  ((-1 * y_vec(k) * log(p_vec(k))) - ((1 - y_vec(k)) * log(1 - p_vec(k))));
-		
-		
-	end
+	% remove bias
+	% delta_2 = delta_2(2:end);
+	
+	% accumulate the gradients
+	gradient_2 += delta_3 * a_2';
+	gradient_1 += delta_2 * x';
 end
 
-J = J / m;
+J = J/m;
+gradient_2 = gradient_2/m;
+gradient_1 = gradient_1/m;
+
+% compute regularization for grads
+gradient_1(:, 2:end) += Theta1(:, 2:end) * lambda/m;
+gradient_2(:, 2:end) += Theta2(:, 2:end) * lambda/m;
 
 
+% unroll grads
+grad = [gradient_1(:); gradient_2(:)];
 
 
+% compute regularization for J
 
+% sum squared vals in Theta, disregarding bias
+sum_theta_1_squared = sum(sum(Theta1(:, 2:end).^2));
+sum_theta_2_squared = sum(sum(Theta2(:, 2:end).^2));	
+reg = (((sum_theta_1_squared + sum_theta_2_squared) * lambda) / (2 * m));
 
-
-
-
-
-
-
-
+J = J + reg;
 
 
 
@@ -106,8 +126,6 @@ J = J / m;
 
 % =========================================================================
 
-% Unroll gradients
-grad = [Theta1_grad(:) ; Theta2_grad(:)];
 
 
 end

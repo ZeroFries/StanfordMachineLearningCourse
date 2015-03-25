@@ -28,8 +28,8 @@ for i = 1:m
 	% get the row of pixels corresponding to that example
 	x = [1; X(i, :)'];
 	% compute activation values for each layer until the end
-	z_2 = [1; Theta1 * x];
-	a_2 = sigmoid(z_2);
+	z_2 = Theta1 * x;
+	a_2 = [1; sigmoid(z_2)];
 	z_3 = Theta2 * a_2;
 	a_3 = sigmoid(z_3);
 	
